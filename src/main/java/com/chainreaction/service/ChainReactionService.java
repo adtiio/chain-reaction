@@ -1,13 +1,19 @@
 package com.chainreaction.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import java.util.*;
 
 import com.chainreaction.handler.ChainReactionHandler;
 import com.chainreaction.model.Block;
 
 @Service
 public class ChainReactionService {
+
+    @Autowired
+    @Lazy
+    private ChainReactionHandler chainReactionHandler;
 
 
     int trav[][]={{0,1},{1,0},{0,-1},{-1,0}};
@@ -52,6 +58,8 @@ public class ChainReactionService {
         int newVal=grid[row][col].getCount()+1;
         grid[row][col].setPlayer(currPlayer);
         grid[row][col].setCount(newVal);
+        chainReactionHandler.broadcastBoardState();
+        delay(300);
         
         if(explode(row,col)){
             grid[row][col].setCount(0);
@@ -67,9 +75,43 @@ public class ChainReactionService {
     public void move(int row,int col) throws Exception{
         Block block=grid[row][col];
         if(block.getPlayer() == player || block.getCount() == 0){
-            increment(row,col,player);
+            bfs(row,col,player);
             player = (player % 2) + 1;
         } 
+
+    }
+    public void delay(int secs){
+        try {
+            Thread.sleep(secs); 
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    public void bfs(int row,int col,int currPlayer) throws Exception{
+        Queue<int[]> q=new ArrayDeque<>();
+        grid[row][col].setCount(grid[row][col].getCount()+1);
+        grid[row][col].setPlayer(currPlayer);
+        q.add(new int[]{row,col});
+        
+        while(!q.isEmpty()){
+            int curr[]=q.poll();
+            int r=curr[0], c=curr[1];
+            if(explode(r, c)){
+                grid[r][c].setCount(0);
+                grid[r][c].setPlayer(0);
+                for(int a[] : trav){
+                    int x=r+a[0], y=c+a[1];
+                    if(x<n && y<m && x>=0 && y>=0){
+                        q.add(new int[]{x,y});
+                        grid[x][y].setCount(grid[x][y].getCount()+1);
+                        grid[x][y].setPlayer(currPlayer);
+                    }
+                    chainReactionHandler.broadcastBoardState();
+                    delay(40);
+                }
+                delay(150);
+            }
+        }
 
     }
 }
