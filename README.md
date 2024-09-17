@@ -37,7 +37,6 @@ Chain Reaction is a real-time multiplayer game where players take turns to incre
 2. **Build the Backend**
 
    ```bash
-   cd src
    mvn clean install
 
 3. **Run the Backend**
