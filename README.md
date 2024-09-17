@@ -31,8 +31,8 @@ Chain Reaction is a real-time multiplayer game where players take turns to incre
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/chain-reaction-game.git
-   cd chain-reaction-game
+   git clone https://github.com/adtiio/chain-reaction.git
+   cd chain-reaction
 
 2. **Build the Backend**
 
