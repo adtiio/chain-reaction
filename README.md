@@ -7,7 +7,10 @@
 Chain Reaction is a real-time multiplayer game where players take turns to increment and trigger chain reactions on a grid-based board. The game is implemented using Java Spring Boot for the backend, WebSocket for real-time communication, and HTML/CSS/JavaScript for the frontend. The game logic involves handling chain reactions using depth-first search (DFS) and recursion.
 
 
-https://github.com/user-attachments/assets/ad19ca48-0523-4c46-a691-2c37721d4ec7
+
+https://github.com/user-attachments/assets/9e43e723-05c6-4c5d-8144-dc97672a60ea
+
+
 
 
 ## Technologies Used
