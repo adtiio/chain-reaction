@@ -113,6 +113,34 @@
         .ball-3-1 { left: 50%; top: 40%; transform: translate(-50%, -50%); }
         .ball-3-2 { left: 42%; top: 60%; transform: translate(-50%, -50%); }
         .ball-3-3 { left: 58%; top: 60%; transform: translate(-50%, -50%); }
+
+        /* Responsive styling for mobile screens */
+        @media (max-width: 768px) {
+            /* Adjust session ID and game board padding */
+            #sessionIdDisplay {
+                font-size: 1.2rem;
+                margin-bottom: 10px;
+            }
+
+            .game-board {
+                grid-template-columns: repeat(10, 40px);
+                grid-template-rows: repeat(10, 40px);
+                padding: 8px;
+                gap: 1px;
+            }
+
+            /* Adjust cell size */
+            .cell {
+                width: 40px;
+                height: 40px;
+            }
+
+            /* Adjust ball size */
+            .ball {
+                width: 20px;
+                height: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -123,20 +151,17 @@
     <div class="game-board" id="gameBoard"></div>
 
     <script>
-        // Retrieve sessionId from URL parameters
+        // JavaScript code (unchanged)
         const urlParams = new URLSearchParams(window.location.search);
         const sessionId = urlParams.get('sessionId');
 
-        // Display sessionId above the game board
         document.getElementById('sessionIdDisplay').textContent = `Session ID: ${sessionId}`;
 
-        // Redirect if sessionId is missing
         if (!sessionId) {
             alert("Session ID is missing! Please return to the home page and enter a valid session ID.");
             window.location.href = '/';
         }
 
-        // WebSocket connection
         const socket = new WebSocket(`/chain?sessionId=${encodeURIComponent(sessionId)}`);
         
         const gameBoard = document.getElementById('gameBoard');
@@ -150,7 +175,6 @@
 
         function renderBoard(grid) {
             gameBoard.innerHTML = '';
-
             for (let row = 0; row < grid.length; row++) {
                 for (let col = 0; col < grid[row].length; col++) {
                     const block = grid[row][col];
@@ -166,11 +190,9 @@
                     if (block.count > 0) {
                         addBallsToCell(cell, block.count);
                     }
-
                     cell.addEventListener('click', function () {
                         makeMove(row, col);
                     });
-
                     gameBoard.appendChild(cell);
                 }
             }
