@@ -8,7 +8,7 @@ import java.util.*;
 @Controller
 public class ChainReactionController {
 
-  @GetMapping("/home")
+  @GetMapping("/")
   public String home() {
     return "index";
   }
