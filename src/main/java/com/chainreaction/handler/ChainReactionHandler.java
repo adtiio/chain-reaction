@@ -1,9 +1,9 @@
 package com.chainreaction.handler;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -18,46 +18,73 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Component
-public class ChainReactionHandler extends TextWebSocketHandler{
+public class ChainReactionHandler extends TextWebSocketHandler {
+
+  //private final ChainReactionService chainReactionService;
+  private final ObjectMapper objectMapper;
+  private final Map<String, ChainReactionService> sessions = new ConcurrentHashMap<>();
+  private final Map<String, List<WebSocketSession>> sessionMap = new ConcurrentHashMap<>(); 
+  
+
+  @Override
+  public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    String sessionId = session.getUri().getQuery().split("=")[1];
+  
+    sessions.computeIfAbsent(sessionId, id -> new ChainReactionService(this,new ObjectMapper()));
+    sessionMap.computeIfAbsent(sessionId, id -> new ArrayList<>()).add(session);
+    sendBoardState(session);
+  }
+
+  @Override
+  protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    String sessionId =session.getUri().getQuery().split("=")[1];
+    ChainReactionService chainReactionService=sessions.get(sessionId);
+
+    Map<String, Object> data = objectMapper.readValue(message.getPayload(), Map.class);
     
-    private final ChainReactionService chainReactionService;
-    private final ObjectMapper objectMapper;    
-    private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        sessions.put(session.getId(), session);
-        sendBoardState(session);
+    int row = (Integer) data.get("row");
+    int col = (Integer) data.get("col");
+    chainReactionService.move(row, col, sessionId);
+
+
+  }
+
+  @Override
+  public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+    String sessionId = session.getUri().getQuery().split("=")[1];
+    // sessions.remove(sessionId);
+    // sessionMap.remove(sessionId);
+
+  }
+
+  public void sendBoardState(WebSocketSession session) throws Exception {
+    String sessionId = session.getUri().getQuery().split("=")[1];
+    ChainReactionService chainReactionService = sessions.get(sessionId);
+
+    if(chainReactionService!=null){
+      Block grid[][] = sessions.get(sessionId).getBoardState();
+      session.sendMessage(new TextMessage(objectMapper.writeValueAsString(grid)));
     }
+  }
 
-    @Override
-    protected void handleTextMessage(WebSocketSession session,TextMessage message) throws Exception{
-        Map<String, Object> data = objectMapper.readValue(message.getPayload(), Map.class);
+  public void broadcastBoardState(String sessionId) throws Exception {
+    ChainReactionService chainReactionService = sessions.get(sessionId);
 
-        int row = (Integer) data.get("row");
-        int col = (Integer) data.get("col");
-        chainReactionService.move(row, col);
-        //chainReactionService.increment(row,col);
-        broadcastBoardState();
+    if(chainReactionService!=null){
+      Block[][] grid =sessions.get(sessionId).getBoardState();
+      String gridJson = objectMapper.writeValueAsString(grid);
+
+      List<WebSocketSession> sessions = sessionMap.get(sessionId); 
+    
+      for (WebSocketSession s : sessions) {
+        s.sendMessage(new TextMessage(gridJson));
+      }
             
-
     }
-
-    @Override
-    public void afterConnectionClosed(WebSocketSession session,CloseStatus status){
-        sessions.remove(session.getId());
-    }
-
-    public void sendBoardState(WebSocketSession session) throws Exception{
-        Block grid[][]=chainReactionService.getBoardState();
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(grid)));
-    }
-    public void broadcastBoardState() throws Exception {
-        Block [][]grid=chainReactionService.getBoardState();
-        String gridJson = objectMapper.writeValueAsString(grid);
-        for (WebSocketSession session : sessions.values()) {
-            session.sendMessage(new TextMessage(gridJson));
-        }
-    }
+ 
     
+  }
+
 }
