@@ -3,27 +3,34 @@ package com.chainreaction.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
 import java.util.*;
 
 import com.chainreaction.handler.ChainReactionHandler;
 import com.chainreaction.model.Block;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class ChainReactionService {
 
-    @Autowired
-    @Lazy
+
     private ChainReactionHandler chainReactionHandler;
+    private ObjectMapper objectMapper;
 
 
     int trav[][]={{0,1},{1,0},{0,-1},{-1,0}};
-    Block [][] grid=new Block[10][10];
+    Block [][] grid;
     int n=10,m=10;
     int player=1;
    
 
 
-     public ChainReactionService() {
+     public ChainReactionService(ChainReactionHandler chainReactionHandler,ObjectMapper objectMapper) {
+        this.objectMapper=objectMapper;
+        this.chainReactionHandler=chainReactionHandler;
+        this.grid = new Block[n][m];
         initializeBoard();
     }
 
@@ -54,28 +61,28 @@ public class ChainReactionService {
         
     }
 
-    public void increment(int row,int col,int currPlayer) throws Exception{
-        int newVal=grid[row][col].getCount()+1;
-        grid[row][col].setPlayer(currPlayer);
-        grid[row][col].setCount(newVal);
-        chainReactionHandler.broadcastBoardState();
-        delay(300);
+    // public void increment(int row,int col,int currPlayer,WebSocketSession session) throws Exception{
+    //     int newVal=grid[row][col].getCount()+1;
+    //     grid[row][col].setPlayer(currPlayer);
+    //     grid[row][col].setCount(newVal);
+    //     chainReactionHandler.broadcastBoardState(session);
+    //     delay(300);
         
-        if(explode(row,col)){
-            grid[row][col].setCount(0);
-            for(int a[] : trav){
-                int x=row+a[0], y=col+a[1];
-                if(x<n && y<m && x>=0 && y>=0){
-                    increment(x,y,currPlayer);
-                }
-            }
-        }
-    }
+    //     if(explode(row,col)){
+    //         grid[row][col].setCount(0);
+    //         for(int a[] : trav){
+    //             int x=row+a[0], y=col+a[1];
+    //             if(x<n && y<m && x>=0 && y>=0){
+    //                 increment(x,y,currPlayer,session);
+    //             }
+    //         }
+    //     }
+    // }
 
-    public void move(int row,int col) throws Exception{
+    public void move(int row,int col,String sessionId) throws Exception{
         Block block=grid[row][col];
         if(block.getPlayer() == player || block.getCount() == 0){
-            bfs(row,col,player);
+            bfs(row,col,player,sessionId);
             player = (player % 2) + 1;
         } 
 
@@ -87,7 +94,7 @@ public class ChainReactionService {
             e.printStackTrace();
         }
     }
-    public void bfs(int row,int col,int currPlayer) throws Exception{
+    public void bfs(int row,int col,int currPlayer,String sessionId) throws Exception{
         Queue<int[]> q=new ArrayDeque<>();
         grid[row][col].setCount(grid[row][col].getCount()+1);
         grid[row][col].setPlayer(currPlayer);
@@ -106,12 +113,13 @@ public class ChainReactionService {
                         grid[x][y].setCount(grid[x][y].getCount()+1);
                         grid[x][y].setPlayer(currPlayer);
                     }
-                    chainReactionHandler.broadcastBoardState();
+                    chainReactionHandler.broadcastBoardState(sessionId);
                     delay(40);
                 }
                 delay(150);
             }
         }
+        chainReactionHandler.broadcastBoardState(sessionId);
 
     }
 }
