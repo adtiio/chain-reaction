@@ -8,7 +8,10 @@ Chain Reaction is a real-time multiplayer game where players take turns to incre
 
 
 
-https://github.com/user-attachments/assets/9e43e723-05c6-4c5d-8144-dc97672a60ea
+
+
+https://github.com/user-attachments/assets/6e6d47cf-4811-41c7-be26-1d7a9c81e713
+
 
 
 
