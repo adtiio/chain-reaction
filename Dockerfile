@@ -10,6 +10,9 @@ COPY . .
 # Add the system.properties to ensure the correct JDK version is used
 RUN echo "java.runtime.version=17" > system.properties
 
+# Grant executable permission to the Maven wrapper script
+RUN chmod +x ./mvnw
+
 # Build the project using Maven
 RUN ./mvnw clean package -DskipTests
 
